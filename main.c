@@ -161,5 +161,8 @@ int main() {
         free(words[i]);
     free(words);
 
+    printf("\nPress Enter to exit...\n");
+    getchar();
+
     return 0;
 }
