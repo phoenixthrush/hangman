@@ -4,6 +4,14 @@
 #include <time.h>
 #include <ctype.h>
 
+#if defined(__APPLE__)
+extern const char binary_duden_txt_start[];
+extern const char binary_duden_txt_end[];
+#else
+extern const char _binary_duden_txt_start[];
+extern const char _binary_duden_txt_end[];
+#endif
+
 const char *HANGMAN[] = {
     "\n\n\n\n\n\n",
     "        |\n        |\n        |\n        |\n        |\n        |\n",
@@ -22,31 +30,41 @@ void clear_screen() {
 }
 
 int main() {
-    FILE *fp = fopen("duden.txt", "r");
-    if (!fp) {
-        printf("File 'duden.txt' not found.\n");
-        return 1;
-    }
+    #if defined(__APPLE__)
+        const char *data = binary_duden_txt_start;
+        size_t size = binary_duden_txt_end - binary_duden_txt_start;
+    #else
+        const char *data = _binary_duden_txt_start;
+        size_t size = _binary_duden_txt_end - _binary_duden_txt_start;
+    #endif
 
     char **words = NULL;
-    char buffer[1024];
     int word_count = 0;
 
-    while (fgets(buffer, sizeof(buffer), fp)) {
-        buffer[strcspn(buffer, "\r\n")] = 0;
-        for (char *p = buffer; *p; ++p)
-            *p = tolower((unsigned char)*p);
+    const char *line_start = data;
+    for (size_t i = 0; i < size; i++) {
+        if (data[i] == '\n' || i == size - 1) {
+            size_t len = &data[i] - line_start + (i == size - 1);
+            while (len > 0 && (line_start[len - 1] == '\r' || line_start[len - 1] == '\n'))
+                len--;
 
-        char *word = malloc(strlen(buffer) + 1);
-        if (!word) break;
-        strcpy(word, buffer);
+            if (len > 0) {
+                char *word = malloc(len + 1);
+                if (!word) break;
+                memcpy(word, line_start, len);
+                word[len] = 0;
 
-        char **tmp = realloc(words, (word_count + 1) * sizeof(char *));
-        if (!tmp) break;
-        words = tmp;
-        words[word_count++] = word;
+                for (char *p = word; *p; ++p)
+                    *p = tolower((unsigned char)*p);
+
+                char **tmp = realloc(words, (word_count + 1) * sizeof(char *));
+                if (!tmp) break;
+                words = tmp;
+                words[word_count++] = word;
+            }
+            line_start = &data[i + 1];
+        }
     }
-    fclose(fp);
 
     if (word_count == 0) {
         printf("No words found.\n");
@@ -67,7 +85,9 @@ int main() {
 
     while (1) {
         clear_screen();
-        printf("============\n");
+        printf("===============\n");
+        printf(" phoenixthrush\n");
+        printf("===============\n");
 
         if (lives == 10) {
             printf("You lose!\n");
@@ -80,7 +100,7 @@ int main() {
             printf("%s", HANGMAN[lives]);
         }
 
-        printf("============\n\n");
+        printf("===============\n\n");
         printf("Word: ");
         for (int i = 0; i < secret_len; i++) {
             if (guessed[(unsigned char)secret[i]])
