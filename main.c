@@ -75,6 +75,13 @@ int main() {
 
     int play = 1;
     while (play) {
+        for (int i = word_count - 1; i > 0; i--) {
+            int j = rand() % (i + 1);
+            char *tmp = words[i];
+            words[i] = words[j];
+            words[j] = tmp;
+        }
+
         char *secret = words[rand() % word_count];
         int secret_len = strlen(secret);
         int letters[256] = {0};

@@ -15,6 +15,8 @@ all: $(OUTPUT_DIR)/main $(OUTPUT_DIR)/main.exe
 $(DUDEN_FILE):
 	curl -L $(DUDEN_URL) -o $(DUDEN_FILE)
 	sed -i '' 's/ä/ae/g; s/ö/oe/g; s/ü/ue/g; s/ß/ss/g; s/Ä/Ae/g; s/Ö/Oe/g; s/Ü/Ue/g' duden.txt
+	shuf duden.txt -o duden-shuffled.txt
+	mv duden-shuffled.txt duden.txt
 
 # macOS Build
 $(OSX_BUILD_DIR)/duden.o: duden.S $(DUDEN_FILE)
